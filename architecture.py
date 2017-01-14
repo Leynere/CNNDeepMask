@@ -3,23 +3,17 @@ from keras.applications import vgg16
 from keras.models import Model, model_from_json
 import os.path
 
-def getModel():
-    if(os.path.isfile('model.json')):
-        return loadModel('model')
+def getModel(filename):
+    if(os.path.isfile(filename + '.json')):
+        return loadModel(filename)
     vgg = vgg16.VGG16(weights="imagenet")
-    inp = Input(shape=(224L,224L,3L), name='in')
+    inp = Input(shape=(224,224,3), name='in')
     shared_layers = vgg.layers[1](inp)
     for i in range(len(vgg.layers)):
         if(i>1 and i < len(vgg.layers)-5):
             shared_layers = vgg.layers[i](shared_layers)
             #print vgg.layers[i]
-
-    seg_predictions = Convolution2D(512,1,1,activation='relu')(shared_layers)
-    seg_predictions = Flatten()(seg_predictions)
-    seg_predictions = Dense(512)(seg_predictions)
-    seg_predictions = Dense(56*56)(seg_predictions)
-    seg_predictions = Reshape(target_shape=(56,56),name='seg_out')(seg_predictions)
-
+            
     score_predictions = MaxPooling2D(pool_size=(2,2),strides=(2,2))(shared_layers)
     score_predictions = Flatten()(score_predictions)
     score_predictions = Dense(512,activation='relu')(score_predictions)
@@ -28,10 +22,16 @@ def getModel():
     score_predictions = Dropout(0.5)(score_predictions)
     score_predictions = Dense(1,name='score_out')(score_predictions)
 
+    seg_predictions = Convolution2D(512,1,1,activation='relu')(shared_layers)
+    seg_predictions = Flatten()(seg_predictions)
+    seg_predictions = Dense(512)(seg_predictions)
+    seg_predictions = Dense(56*56)(seg_predictions)
+    seg_predictions = Reshape(target_shape=(56,56),name='seg_out')(seg_predictions)
+
     model = Model(input=inp,output=[seg_predictions,score_predictions])
     return model
 
-def loadModel(fileName):
+def loadModel(filename):
     json_file = open(filename + '.json', 'r')
     loaded_model_json = json_file.read()
     json_file.close()
@@ -39,9 +39,9 @@ def loadModel(fileName):
     loaded_model.load_weights(filename + '.h5')
     return loaded_model
 
-def saveModel(model, fileName):
+def saveModel(model, filename):
     model_json = model.to_json()
-    with open(filename + '.json') as json_file:
+    with open(filename + '.json','w') as json_file:
         json_file.write(model_json)
         
     model.save_weights(filename + '.h5')
