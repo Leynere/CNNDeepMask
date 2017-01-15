@@ -14,7 +14,7 @@ annFile='%s/annotations/instances_%s.json'%(dataDir,dataType)
 def getScore(mask):
     isCentered = -1
     centerFrame = 16
-    offset = (224/2)-centerFrame
+    offset = int((224/2)-centerFrame)
     for x in range(centerFrame*2):
         for y in range(centerFrame*2):
             if(mask[offset+x][offset+y] == 1):
@@ -28,7 +28,7 @@ def getScore(mask):
     if(isCentered == -1):
         return -1
     
-    offset = (224-128)/2
+    offset = int((224-128)/2)
     for x in range(128):
         if(mask[offset][offset+x] == 1):
             isNotTooLarge = -1
@@ -74,13 +74,14 @@ def getDatas(coco, cat, nbMax):
     for i in range(len(imgIds)):
         img = coco.loadImgs(imgIds[i])[0]
         I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
-        I = cv2.resize(I,(224,224))
-
-        '''I[:,:,0] -= 103.939
-        I[:,:,1] -= 116.779
-        I[:,:,2] -= 123.68'''
+        I = cv2.resize(I,(224,224)).astype(np.float32)
         
         if(I.shape == (224,224,3)):
+
+            I[:,:,0] -= 103.939
+            I[:,:,1] -= 116.779
+            I[:,:,2] -= 123.68
+            
             annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=0)
             anns = coco.loadAnns(annIds)
             for ann in anns:
@@ -91,8 +92,8 @@ def getDatas(coco, cat, nbMax):
                     nI = cv2.resize(nI, (224, 224))
 
                     sI = getScore(nI)
-                    #nI = setupMask(nI,224)
-                    nI = cv2.resize(nI,(56,56))
+                    nI = setupMask(nI,224)
+                    nI = cv2.resize(nI,(56,56)).astype(np.float32)
                     if((sI == -1 and nbNeg > 0) or (sI == 1 and nbPos > 0)):
                         retIn.append(I)
                         retMask.append(nI)
@@ -121,7 +122,7 @@ def prepareAllData(nbElem, cats):
         allInputs.extend(inputs)
         allMasks.extend(masks)
         allScores.extend(scores)
-    return (np.asarray(allInputs),np.asarray(allMasks), np.asarray(allScores))
+    return (np.asarray(allInputs),np.asarray(allMasks), np.asarray(allScores).astype(np.float32))
     #return (allInputs,allMasks,allScores)
     
     
