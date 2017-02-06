@@ -4,6 +4,8 @@ from pycocotools.coco import COCO
 import numpy as np
 import skimage.io as io
 import cv2
+import matplotlib.pyplot as plt #a enlever
+
 
 
 dataDir='../../coco-master'
@@ -45,8 +47,8 @@ def getScore(mask):
 def setupMask(mask,length):
     for x in range(length):
         for y in range(length):
-            if(mask[x][y] != 1):
-                mask[x][y] = -1
+            if(mask[x][y] != -1.0):
+                mask[x][y] = 1.0
     
     return mask
 
@@ -67,10 +69,6 @@ def getDatas(coco, cat, nbMax):
     retMask = []
     retScore = []
     
-    #retIn = np.empty([224,224,3])
-    #retMask = np.empty([56,56])
-    #retScore = np.empty([1])
-    
     for i in range(len(imgIds)):
         img = coco.loadImgs(imgIds[i])[0]
         I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
@@ -78,32 +76,33 @@ def getDatas(coco, cat, nbMax):
         
         if(I.shape == (224,224,3)):
 
+            I = np.vectorize(lambda x : 256 - x)(I)
             I[:,:,0] -= 103.939
             I[:,:,1] -= 116.779
             I[:,:,2] -= 123.68
             
+            #I = np.expand_dims(I,axis=2)
+            
             annIds = coco.getAnnIds(imgIds=img['id'], catIds=catIds, iscrowd=0)
             anns = coco.loadAnns(annIds)
             for ann in anns:
-                for seg in ann['segmentation']:
-                    nI = Image.new('L', (img['width'], img['height']))
-                    ImageDraw.Draw(nI).polygon(seg, outline=1, fill=1)
-                    nI = np.asarray(nI)
-                    nI = cv2.resize(nI, (224, 224))
-
-                    sI = getScore(nI)
-                    nI = setupMask(nI,224)
-                    nI = cv2.resize(nI,(56,56)).astype(np.float32)
-                    if((sI == -1 and nbNeg > 0) or (sI == 1 and nbPos > 0)):
-                        retIn.append(I)
-                        retMask.append(nI)
-                        retScore.append(sI)
-                        nbMax = nbMax - 1
-                        if(nbMax <= 0):
-                            print ('Done (t={:0.2f}s)'.format(time.time()- tic))
-                            return (retIn, retMask, retScore)
-                        if (sI == 1):
-                            nbPos = nbPos -1
+                nI = Image.new('F', (img['width'], img['height']),color = -1)
+                ImageDraw.Draw(nI).rectangle(ann['bbox'],outline=1, fill=1)
+                nI = np.asarray(nI)
+                nI = cv2.resize(nI, (224, 224))
+                sI = getScore(nI)
+                nI = cv2.resize(nI,(56,56))
+                nI = setupMask(nI,56).astype(np.float32)
+                if((sI == -1 and nbNeg > 0) or (sI == 1 and nbPos > 0)):
+                    retIn.append(I)
+                    retMask.append(nI)
+                    retScore.append(sI)
+                    nbMax = nbMax - 1
+                    if(nbMax <= 0):
+                        print ('Done (t={:0.2f}s)'.format(time.time()- tic))
+                        return (retIn, retMask, retScore)
+                    if (sI == 1):
+                        nbPos = nbPos -1
                         if (sI == -1):
                             nbNeg = nbNeg -1
                         
