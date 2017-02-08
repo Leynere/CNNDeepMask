@@ -111,12 +111,13 @@ def initVgg16():
     for i in range(len(vgg.layers)):
         if(i>1 and i < len(vgg.layers)-5):
             shared_layers = vgg.layers[i](shared_layers)
-    return shared_layers
+    return (inp,shared_layers)
 
 def getModel(filename):
     if(os.path.isfile(filename + '.json')):
         return loadModel(filename)
-    shared_layers = initVgg16();
+    
+    inp, shared_layers = initVgg16();
     score_predictions = MaxPooling2D(pool_size=(2,2),strides=(2,2))(shared_layers)
     score_predictions = Flatten()(score_predictions)
     score_predictions = Dense(512,activation='relu')(score_predictions)

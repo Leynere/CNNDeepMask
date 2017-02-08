@@ -1,9 +1,15 @@
-from architecture import getModel,saveModelvModel
+from architecture import getModel,saveModel
 from objective import segObjectiveFunction,scoreObjectiveFunction
 from dataProcessing import getScore, getDatas, prepareAllData
+from keras.optimizers import SGD
 
-inputs, masks, scores = prepareAllData()
+model = getModel('none')
+sgd = SGD(lr=0.001, decay=0.00005,momentum=0.9, nesterov=True,clipvalue=500)
+model.compile(optimizer=sgd,loss={'score_out': scoreObjectiveFunction, 'seg_out': segObjectiveFunction})
 
-model = getModel()
-model.compile(optimizer='sgd',loss={'seg_out': segObjectiveFunction, 'score_out': scoreObjectiveFunction})
-model.fit(inputs, {'seg_out': masks, 'score_out': scores}, nb_epoch=10, batch_size=32, verbose=2, shuffle=True)
+inputs, masks, scores = prepareAllData(1000,['outdoor', 'food', 'indoor', 'appliance', 'sports', 'person', 'animal', 'vehicle', 'furniture', 'accessory'],offset)
+
+model.fit({'in' : inputs}, { 'score_out': scores, 'seg_out': masks}, nb_epoch=1, batch_size=1, verbose=2, shuffle=True)
+
+saveModel(model,"deepmask10000")
+    

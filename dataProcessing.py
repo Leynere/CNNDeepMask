@@ -52,7 +52,7 @@ def setupMask(mask,length):
     
     return mask
 
-def getDatas(coco, cat, nbMax):
+def getDatas(coco, cat, nbMax,offset):
     
     tic = time.time()
 
@@ -70,7 +70,7 @@ def getDatas(coco, cat, nbMax):
     retScore = []
     
     for i in range(len(imgIds)):
-        img = coco.loadImgs(imgIds[i])[0]
+        img = coco.loadImgs(imgIds[i+offset])[0]
         I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
         I = cv2.resize(I,(224,224)).astype(np.float32)
         
@@ -107,7 +107,7 @@ def getDatas(coco, cat, nbMax):
                             nbNeg = nbNeg -1
                         
                         
-def prepareAllData(nbElem, cats):
+def prepareAllData(nbElem, cats, offset):
     global dataDir
     global dataType
     global annFile
@@ -117,7 +117,7 @@ def prepareAllData(nbElem, cats):
     allMasks = []
     allScores = []
     for catStr in cats:
-        inputs, masks, scores = getDatas(coco, catStr, nbElem)
+        inputs, masks, scores = getDatas(coco, catStr, nbElem, offset)
         allInputs.extend(inputs)
         allMasks.extend(masks)
         allScores.extend(scores)
