@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt #a enlever
 
 
 
-dataDir='../../coco-master'
+dataDir='../coco'
 dataType='train2014'
 annFile='%s/annotations/instances_%s.json'%(dataDir,dataType)
 
