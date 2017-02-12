@@ -9,7 +9,6 @@ model.compile(optimizer=sgd,loss={'score_out': scoreObjectiveFunction, 'seg_out'
 
 inputs, masks, scores = prepareAllData(1000,['outdoor', 'food', 'indoor', 'appliance', 'sports', 'person', 'animal', 'vehicle', 'furniture', 'accessory'],offset)
 
-model.fit({'in' : inputs}, { 'score_out': scores, 'seg_out': masks}, nb_epoch=1, batch_size=1, verbose=2, shuffle=True)
+model.fit({'in' : inputs}, { 'score_out': scores, 'seg_out': masks}, nb_epoch=1, batch_size=32, verbose=2, shuffle=True)
 
 saveModel(model,"deepmask10000")
-    

@@ -12,6 +12,10 @@ dataDir='../../coco-master'
 dataType='train2014'
 annFile='%s/annotations/instances_%s.json'%(dataDir,dataType)
 
+def downloadAndSave(img):
+    I = io.imread('http://mscoco.org/images/%d'%(img['id']))
+    io.imsave("./data/"+img['file_name'])
+    return I
 
 def getScore(mask):
     isCentered = -1
@@ -71,7 +75,8 @@ def getDatas(coco, cat, nbMax,offset):
     
     for i in range(len(imgIds)):
         img = coco.loadImgs(imgIds[i+offset])[0]
-        I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
+        I = downloadAndSave(img)
+        #I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
         I = cv2.resize(I,(224,224)).astype(np.float32)
         
         if(I.shape == (224,224,3)):
@@ -99,7 +104,7 @@ def getDatas(coco, cat, nbMax,offset):
                     retScore.append(sI)
                     nbMax = nbMax - 1
                     if(nbMax <= 0):
-                        print ('Done (t={:0.2f}s)'.format(time.time()- tic))
+                        #print ('Done (t={:0.2f}s)'.format(time.time()- tic))
                         return (retIn, retMask, retScore)
                     if (sI == 1):
                         nbPos = nbPos -1
