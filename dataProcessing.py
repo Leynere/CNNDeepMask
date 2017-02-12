@@ -75,8 +75,8 @@ def getDatas(coco, cat, nbMax,offset):
     
     for i in range(len(imgIds)):
         img = coco.loadImgs(imgIds[i+offset])[0]
-        I = downloadAndSave(img)
-        #I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
+        #I = downloadAndSave(img)
+        I = io.imread('%s/images/%s/%s'%(dataDir,dataType,img['file_name']))
         I = cv2.resize(I,(224,224)).astype(np.float32)
         
         if(I.shape == (224,224,3)):
